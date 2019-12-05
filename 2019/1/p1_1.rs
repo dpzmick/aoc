@@ -36,15 +36,11 @@ fn main() {
     let file = File::open("input").expect("Failed to open input");
     let reader = BufReader::new(file);
 
-    // trying to figure out how to flatten this entire thing into a
-    // single sum() call but then you need to do a chain over a
-    // variable number of chains, or something... not sure that makes
-    // any sense
     let fuel: i32 = reader
         .lines()
         .map(|l| l.unwrap())
         .map(|l| l.parse::<i32>().expect("Bad input"))
-        .map(|module_mass| FuelIter::new(module_mass).sum::<i32>())
+        .flat_map(|module_mass| FuelIter::new(module_mass))
         .sum();
 
     println!("fuel: {}", fuel);
