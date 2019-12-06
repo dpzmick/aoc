@@ -5,23 +5,6 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::VecDeque;
 
-fn visit(name: &str, map: &HashMap<String, HashSet<String>>, depth: u64) -> u64 {
-    let mut ret = 0; // triangle number
-    for i in 0..depth {
-        ret += 1;
-    }
-
-    if !map.contains_key(name) {
-        return ret;
-    }
-
-    for child in &map[name] {
-        ret += visit(child, map, depth+1);
-    }
-
-    return ret;
-}
-
 fn main() {
     let file = File::open("input").expect("Failed to open input");
     let it = BufReader::new(file)
@@ -36,7 +19,7 @@ fn main() {
     let mut adj: Vec<Vec<_>>               = Vec::new();
     let mut nameid: HashMap<String, usize> = HashMap::new();
     let mut idname: HashMap<usize, String> = HashMap::new();
-    for (a, b) in it {
+    for (a, b) in it { // only read file once, at the cost of doing tons of allocations
         let n = nameid.len();
         let aid = *nameid.entry(a.clone()).or_insert(n);
 
@@ -78,7 +61,6 @@ fn main() {
         }
 
         if visited.contains(&nxt) { continue; }
-        println!("nxt: {}", idname[&nxt]);
 
         for (i, entry) in adj[nxt].iter().enumerate() {
             if *entry {
@@ -89,3 +71,31 @@ fn main() {
         visited.insert(nxt);
     }
 }
+
+
+/* irritating that this code is fast:
+$ /usr/bin/time -v ./p6_1
+298
+	Command being timed: "./p6_1"
+	User time (seconds): 0.00
+	System time (seconds): 0.00
+	Percent of CPU this job got: 90%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.01
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4528
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 769
+	Voluntary context switches: 1
+	Involuntary context switches: 0
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0 */
