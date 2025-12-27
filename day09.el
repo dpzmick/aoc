@@ -304,6 +304,7 @@
 ;; I guess its probably still okay
 
 ;; in compressed point space
+;; could maybe have both prefix sums precomputed?
 (defun pair-forms-rect (a b v)
   (let* ((ax (point-x a))
          (ay (point-y a))
@@ -369,3 +370,6 @@
        (area-between (car best) (cdr best))))))
 
 ;; was very fast with native compilation, less than a second on the full input
+;; 
+;; I will admit I did look up solutions to this one! I'd not have come up with
+;; the prefix sum; at least not quickly
