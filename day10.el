@@ -317,11 +317,13 @@
    (< x (mat-rows m))
    (< y (mat-cols m))))
 
-;; row major
+;; col major, didn't think hard about this
 (defun mat-index (m x y)
   (when (not (mat-inbounds m x y))
     (error "out of bounds"))
-   (+ (* y (mat-rows m)) x))
+   (+
+    x
+    (* y (mat-rows m))))
 
 (defun mat-ref (mat x y)
   (aref (mat-data mat) (mat-index mat x y)))
@@ -336,7 +338,7 @@
     (erase-buffer)
     (cl-loop for r from 0 below (mat-rows m) do
              (cl-loop for c from 0 below (mat-cols m) do
-                      (insert (format "%50d" (mat-ref m r c))))
+                      (insert (format "%10d" (mat-ref m r c))))
              (insert "\n"))
     (goto-char (point-min))
     (pop-to-buffer (current-buffer))))
@@ -398,6 +400,33 @@
                        (+ (* r1-val factor1)
                           (* r2-val factor2)))))
 
+(defun gcd (a b)
+  "Compute greatest common divisor of A and B using Euclidean algorithm."
+  (setq a (abs a))
+  (setq b (abs b))
+  (while (not (zerop b))
+    (let ((temp b))
+      (setq b (mod a b))
+      (setq a temp)))
+  a)
+
+(defun row-gcd (m row-idx)
+  "Get GCD of all non-zero values in a row."
+  (let ((vals (cl-loop for c from 0 below (mat-cols m)
+                       for v = (abs (mat-ref m row-idx c))
+                       when (not (zerop v))
+                       collect v)))
+    (if vals
+        (cl-reduce #'gcd vals)
+      1)))
+
+(defun normalize-row (m row-idx)
+  "Divide row by GCD of its coefficients to keep values bounded."
+  (let ((g (row-gcd m row-idx)))
+    (when (> g 1)
+      (cl-loop for c from 0 below (mat-cols m)
+               do (mat-set m row-idx c (/ (mat-ref m row-idx c) g))))))
+
 ;; starting from st-row (where st-row,c is pivot element)
 ;; elimiate all values below
 ;;
@@ -408,7 +437,8 @@
   (cl-loop for r from (1+ pivot-r) below (mat-rows m)
            for factor1 = (mat-ref m r c) ;; scale by our val
            for factor2 = (* -1 (mat-ref m pivot-r c)) ;; scale by pivot
-           do (add-rows m pivot-r r factor1 factor2)))
+           do (add-rows m pivot-r r factor1 factor2)
+           do (normalize-row m r)))
 
 ;; try to eliminate all _other_ values in the column going up.
 ;; run this once we have the matrix in upper triangular form
@@ -418,7 +448,8 @@
            for pivot-val = (mat-ref m pivot-r c)
            when (not (zerop target-val))
            ;; r = pivot-val * r - target-val * pivot-row
-           do (add-rows m pivot-r r (- target-val) pivot-val)))
+           do (add-rows m pivot-r r (- target-val) pivot-val)
+           do (normalize-row m r)))
 
 (defun nonzero-row-idx-for-col (m c &optional st)
   (cl-loop for r from (or st 0) below (mat-rows m)
@@ -593,7 +624,8 @@
   (cl-loop for (pr . pc) in pivot-cols
            for pivot-val = (mat-ref m pr pc)
            for eff-rhs = (pivot-row-effective-rhs m pr free-vals)
-           always (zerop (mod eff-rhs pivot-val))))
+           ;; Check divisibility using absolute value to handle negative pivots
+           always (zerop (mod eff-rhs (abs pivot-val)))))
 
 (defun solve-line-p2 (line)
   (let* ((toggles (vconcat (d10-line-p2-toggles line)))
@@ -602,16 +634,31 @@
          (pivots (eliminate m)) ;; (r . c)
          (fvc (free-var-cols m pivots))  ;; just c
          (fv-maxes (get-maxes fvc toggles jolts))
-         (all-fv-values (all-combinations fv-maxes)))
-    (message "pivots %s fvc %s" pivots fvc)
-    (show-mat m)
+         (all-fv-values (all-combinations fv-maxes))
+         (debug-count 0)
+         (integer-pass-count 0)
+         (nonneg-pass-count 0))
+    (message "pivots %s fvc %s fv-maxes %s" pivots fvc fv-maxes)
+    ;;(show-mat m)
     (cl-loop for comb in all-fv-values
+             ;; do (setq debug-count (1+ debug-count))
              for fv-vals = (zip fvc comb)
-             when (integer-solution-p m pivots fv-vals)  ;; ADD THIS, FIXME understand this trick
-             for sol = (solve-system m pivots fv-vals) ;; make sure not modifying
+             for int-sol-p = (integer-solution-p m pivots fv-vals)
+             when int-sol-p
+             ;; do (progn
+             ;;      (setq integer-pass-count (1+ integer-pass-count))
+             ;;      (message "Integer solution found for free-vars %s" fv-vals))
+             for sol = (solve-system m pivots fv-vals)
              for total = (solution-sum sol)
-             when (solution-non-negative-p sol)
+             for nonneg-p = (solution-non-negative-p sol)
+             when nonneg-p
+             ;; do (progn
+             ;;      (setq nonneg-pass-count (1+ nonneg-pass-count))
+             ;;      (message "Non-negative solution found: %s total=%s" sol total))
+             when (and int-sol-p nonneg-p)
              minimize total)))
+             ;; finally (message "Checked %d combinations, %d passed integer test, %d passed non-neg test"
+                            ;; debug-count integer-pass-count nonneg-pass-count))))
 
 (solve-line-p2
  (parse-line-p2
