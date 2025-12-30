@@ -638,7 +638,7 @@
          (debug-count 0)
          (integer-pass-count 0)
          (nonneg-pass-count 0))
-    (message "pivots %s fvc %s fv-maxes %s" pivots fvc fv-maxes)
+    ;;(message "pivots %s fvc %s fv-maxes %s" pivots fvc fv-maxes)
     ;;(show-mat m)
     (cl-loop for comb in all-fv-values
              ;; do (setq debug-count (1+ debug-count))
