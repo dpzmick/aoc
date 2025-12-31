@@ -26,12 +26,14 @@
    (< y (mat-cols m))))
 
 ;; col major, didn't think hard about this
+;; (defun mat-index (m x y)
+;;   (when (not (mat-inbounds m x y))
+;;     (error "out of bounds"))
+;;    (+
+;;     x
+;;     (* y (mat-rows m))))
 (defun mat-index (m x y)
-  (when (not (mat-inbounds m x y))
-    (error "out of bounds"))
-   (+
-    x
-    (* y (mat-rows m))))
+  (+ (* x (mat-cols m)) y))  ; index = x * cols + y (ROW-MAJOR)
 
 (defun mat-ref (mat x y)
   (aref (mat-data mat) (mat-index mat x y)))
