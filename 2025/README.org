@@ -1,0 +1,153 @@
+* 2025 AoC
+
+The elisp solutions here were mostly hand written.
+
+Following that, I had claude code port a few of the computationally interesting problems to other languages:
+- Direct port to python, using same data structures, no libraries
+- Port to python using idiomatic python, numpy allowed
+- Direct port to lua using same structures, no libraries
+- Direct port to julia, using same structures, no libraries
+- Port to julia using idiomatic julia
+
+I then had claude also write benchmarking code and reporting code
+
+** performance results M1 mac
+
+Note that luajit is not heavily optimized on m1 mac
+
+#+begin_src
+============================================================================================================================================
+COMPREHENSIVE PERFORMANCE COMPARISON: All Implementations
+============================================================================================================================================
+
+Problem             Elisp       Python     Py-Idiom          Lua        Julia     Jl-Idiom         Best Winner    
+                     (ms)      (elisp)         (ms)         (ms)      (elisp)         (ms)                        
+--------------------------------------------------------------------------------------------------------------------------------------------
+Day 09 Part 1         7.98        41.28        27.62         0.35         0.17         0.54         0.17 Julia     
+Day 09 Part 2      1135.72      3678.01       394.40       366.45        53.10         1.86         1.86 Jl-Idiom  
+Day 10 Part 1       134.04        33.33        33.13       154.88         5.27         2.96         2.96 Jl-Idiom  
+Day 10 Part 2      5408.45     24816.38     11096.17      1185.64       395.69       268.60       268.60 Jl-Idiom  
+Day 11 Part 1        49.57       314.92         3.39         3.54         2.53         0.84         0.84 Jl-Idiom  
+Day 11 Part 2        49.17       317.86         4.13         3.76         2.80         0.85         0.85 Jl-Idiom  
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TOTALS            6784.93     29201.79     11558.84      1714.61       459.56       275.66
+============================================================================================================================================
+
+
+============================================================================================================================================
+SPEEDUP ANALYSIS (relative to Elisp - reference implementation)
+============================================================================================================================================
+
+Problem          Py-Elisp     Py-Idiom          Lua        Julia     Jl-Idiom
+--------------------------------------------------------------------------------------------------------------------------------------------
+Day 09 Part 1        0.19x        0.29x       23.09x       48.20x       14.88x
+Day 09 Part 2        0.31x        2.88x        3.10x       21.39x      609.69x
+Day 10 Part 1        4.02x        4.05x        0.87x       25.41x       45.26x
+Day 10 Part 2        0.22x        0.49x        4.56x       13.67x       20.14x
+Day 11 Part 1        0.16x       14.61x       14.01x       19.62x       58.75x
+Day 11 Part 2        0.15x       11.92x       13.07x       17.58x       57.76x
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+OVERALL             0.23x        0.59x        3.96x       14.76x       24.61x
+============================================================================================================================================
+
+
+================================================================================
+KEY INSIGHTS
+================================================================================
+
+1. OVERALL PERFORMANCE (Total time for all problems):
+   - Julia Idiomatic           276 ms  (FASTEST - 24.6x faster than Elisp)
+   - Julia (JIT)               460 ms  (14.8x faster than Elisp)
+   - Lua (LuaJIT)            1,715 ms  (4.0x faster than Elisp)
+   - Elisp (native)          6,785 ms  (REFERENCE IMPLEMENTATION)
+   - Python Idiomatic       11,559 ms  (1.7x slower than Elisp)
+   - Python Elisp-mirrored  29,202 ms  (4.3x slower than Elisp)
+
+2. PYTHON IDIOMATIC vs ELISP (reference):
+   Day 09 Part 1:  3.46x slower than Elisp
+   Day 09 Part 2:  2.88x faster than Elisp
+   Day 10 Part 1:  4.05x faster than Elisp
+   Day 10 Part 2:  2.05x slower than Elisp
+   Day 11 Part 1: 14.61x faster than Elisp
+   Day 11 Part 2: 11.92x faster than Elisp
+
+3. WINNER BY PROBLEM:
+   Day 09 Part 1: Julia      (    0.17 ms)
+   Day 09 Part 2: Jl-Idiom   (    1.86 ms)
+   Day 10 Part 1: Jl-Idiom   (    2.96 ms)
+   Day 10 Part 2: Jl-Idiom   (  268.60 ms)
+   Day 11 Part 1: Jl-Idiom   (    0.84 ms)
+   Day 11 Part 2: Jl-Idiom   (    0.85 ms)
+
+================================================================================
+#+end_src
+
+** performance results random linux box
+cpu is one vcpu of "AMD EPYC-Genoa Processor"
+
+#+begin_src
+============================================================================================================================================
+COMPREHENSIVE PERFORMANCE COMPARISON: All Implementations
+============================================================================================================================================
+
+Problem             Elisp       Python     Py-Idiom          Lua        Julia     Jl-Idiom         Best Winner
+                     (ms)      (elisp)         (ms)         (ms)      (elisp)         (ms)
+--------------------------------------------------------------------------------------------------------------------------------------------
+Day 09 Part 1        12.29        21.26        23.63         1.23         0.13         0.22         0.13 Julia
+Day 09 Part 2      1317.09      1454.47       374.53       411.18        60.18         2.88         2.88 Jl-Idiom
+Day 10 Part 1       137.81        25.58        24.35       184.97         7.63         4.03         4.03 Jl-Idiom
+Day 10 Part 2      7516.14     12489.09     12290.55      1385.48       587.22       324.20       324.20 Jl-Idiom
+Day 11 Part 1          ---       134.26         3.99         3.96         3.29         1.19         1.19 Jl-Idiom
+Day 11 Part 2          ---       131.60         5.22         5.35         4.26         1.33         1.33 Jl-Idiom
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TOTALS            8983.33     14256.26     12722.26      1992.16       662.72       333.85
+============================================================================================================================================
+
+
+============================================================================================================================================
+SPEEDUP ANALYSIS (relative to Elisp - reference implementation)
+============================================================================================================================================
+
+Problem          Py-Elisp     Py-Idiom          Lua        Julia     Jl-Idiom
+--------------------------------------------------------------------------------------------------------------------------------------------
+Day 09 Part 1        0.58x        0.52x       10.03x       93.58x       56.07x
+Day 09 Part 2        0.91x        3.52x        3.20x       21.89x      456.58x
+Day 10 Part 1        5.39x        5.66x        0.75x       18.05x       34.22x
+Day 10 Part 2        0.60x        0.61x        5.42x       12.80x       23.18x
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+OVERALL             0.63x        0.71x        4.51x       13.56x       26.91x
+============================================================================================================================================
+
+
+================================================================================
+KEY INSIGHTS
+================================================================================
+
+1. OVERALL PERFORMANCE (Total time for all problems):
+   - Julia Idiomatic           334 ms  (FASTEST - 26.9x faster than Elisp)
+   - Julia (JIT)               663 ms  (13.6x faster than Elisp)
+   - Lua (LuaJIT)            1,992 ms  (4.5x faster than Elisp)
+   - Elisp (native)          8,983 ms  (REFERENCE IMPLEMENTATION)
+   - Python Idiomatic       12,722 ms  (1.4x slower than Elisp)
+   - Python Elisp-mirrored  14,256 ms  (1.6x slower than Elisp)
+
+2. PYTHON IDIOMATIC vs ELISP (reference):
+   Day 09 Part 1:  1.92x slower than Elisp
+   Day 09 Part 2:  3.52x faster than Elisp
+   Day 10 Part 1:  5.66x faster than Elisp
+   Day 10 Part 2:  1.64x slower than Elisp
+
+3. WINNER BY PROBLEM:
+   Day 09 Part 1: Julia      (    0.13 ms)
+   Day 09 Part 2: Jl-Idiom   (    2.88 ms)
+   Day 10 Part 1: Jl-Idiom   (    4.03 ms)
+   Day 10 Part 2: Jl-Idiom   (  324.20 ms)
+   Day 11 Part 1: Jl-Idiom   (    1.19 ms)
+   Day 11 Part 2: Jl-Idiom   (    1.33 ms)
+
+================================================================================
+#+end_src
