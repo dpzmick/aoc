@@ -8,7 +8,7 @@ from collections import defaultdict
 
 # Load all results
 elisp = json.loads(Path('elisp_results.json').read_text())
-python_new = json.loads(Path('python_results.json').read_text())
+python_new = json.loads(Path('python/python_results.json').read_text())
 lua = json.loads(Path('lua/lua_results.json').read_text())
 julia = json.loads(Path('julia/julia_results.json').read_text())
 
